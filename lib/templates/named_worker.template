@@ -1,0 +1,32 @@
+# <<ARGS>>
+# <<MODULENAME>>
+
+defmodule <<MODULENAME>> do
+  use GenServer
+  ##############################
+  # API
+  ##############################
+
+  def start_link(<<ARGS>>) do
+    GenServer.start_link(__MODULE__, [<<ARGS>>], [name: __MODULE__])
+  end
+
+  defmodule State do
+    @doc false
+    defstruct [
+    ]
+  end
+
+  ##############################
+  # GenServer Callbacks
+  ##############################
+
+  def init([<<ARGS>>]) do
+    {:ok, %State{}}
+  end
+
+  ##############################
+  # Internal Calls
+  ##############################
+
+end
