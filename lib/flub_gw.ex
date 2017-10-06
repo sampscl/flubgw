@@ -80,13 +80,12 @@ defmodule FlubGw do
 
   @spec start_gateway(gateway()) :: :ok | {:error, any()}
   @doc """
-  Start a gateway server for gateway. The server will accept incoming route
+  Start a gateway server for `gateway`. The server will accept incoming route
   connections and republish any messages received.
 
   Returns `:ok` on success, `{:error, reason}` on failure.
   """
-  def start_gateway({:tcp, local_host: addr, local_port: port}) do
-    Logger.debug("TCP Gateway starting on #{addr}:#{port}")
+  def start_gateway({:tcp, local_host: addr, local_port: port} = _gateway) do
     case FlubGw.TcpGateway.Listener.Worker.Supervisor.start_child(addr, port) do
       {:ok, _} -> :ok
       err      -> {:error, err}
