@@ -5,10 +5,10 @@ defmodule FlubGw.TcpRoute.Worker do
   @behaviour FlubGw.Router
   use GenServer
   import ShorterMaps
-  require Logger
   import LoggerUtils
+  require Logger
 
-  @keep_alive_interval_ms 15_000
+  @keep_alive_interval_ms 120_000
 
   ##############################
   # API
