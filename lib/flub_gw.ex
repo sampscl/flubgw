@@ -50,7 +50,7 @@ defmodule FlubGw do
       :ok ->
         # pub down when route dies for any reason
         Ghoul.summon(route, on_death: fn(route) ->
-          Flub.pub(%{route: route(), status: :down}, :flubgw_route_status)
+          Flub.pub(%{route: route, status: :down}, :flubgw_route_status)
         end)
 
         # do ghoul outside of route manager for ghoul safety
@@ -59,7 +59,7 @@ defmodule FlubGw do
         end
 
         # sub to status if requested
-        if(Keyword.get(route_opts, :sub_to_status), false) do
+        if(Keyword.get(route_opts, :sub_to_status, false)) do
           Flub.sub(:flubgw_route_status)
         end
         :ok
