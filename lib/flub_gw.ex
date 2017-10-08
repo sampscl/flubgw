@@ -59,7 +59,7 @@ defmodule FlubGw do
         end
 
         # sub to status if requested
-        if(Keyword.get(route_opts, :sub_to_status)) do
+        if(Keyword.get(route_opts, :sub_to_status), false) do
           Flub.sub(:flubgw_route_status)
         end
         :ok
