@@ -34,7 +34,7 @@ defmodule FlubGw do
 
   route_opts:
   1. sub_to_status: True to Flub.sub to route status reports. You will receive
-    reports like this: %{route: {kind, target, opts}, status: :up | :down}
+    reports like this: `%Flub.Message{data: %{route: route(), status: :up | :down}, channel: :flubgw_route_status}`
   2. autoremove: True to automatically remove this route when the calling pid
   dies. False keeps the route around until it is manually removed. Do not set
   autoremove to true and then call `remove_direct_route` or
@@ -48,9 +48,19 @@ defmodule FlubGw do
   def add_direct_route(route, channel, [route_opts: route_opts, sub_opts: _sub_opts] = opts) do
     case FlubGw.Route.Manager.add_direct_route(route, channel, opts) do
       :ok ->
+        # pub down when route dies for any reason
+        Ghoul.summon(route, on_death: fn(route) ->
+          Flub.pub(%{route: route(), status: :down}, :flubgw_route_status)
+        end)
+
         # do ghoul outside of route manager for ghoul safety
         if(Keyword.get(route_opts, :autoremove, true)) do
           Ghoul.summon({route, channel}, on_death: fn({route, channel}) -> remove_direct_route(route, channel) end)
+        end
+
+        # sub to status if requested
+        if(Keyword.get(route_opts, :sub_to_status)) do
+          Flub.sub(:flubgw_route_status)
         end
         :ok
 

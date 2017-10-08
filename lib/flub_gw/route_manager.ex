@@ -94,6 +94,7 @@ defmodule FlubGw.Route.Manager do
   def do_add_direct_route(~M{routes} = state, route, channel, [route_opts: _route_opts, sub_opts: sub_opts] = _opts) do
     new_state = case Map.get(routes, {route, channel}, 0) do
       0 -> # make a new route for this {route, channel}
+        Flub.pub(%{route: route, status: :up}, :flubgw_route_status)
         Flub.sub(channel, sub_opts)
         state
         |> start_route_worker(route)
