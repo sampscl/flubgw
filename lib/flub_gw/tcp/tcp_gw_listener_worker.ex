@@ -13,7 +13,7 @@ defmodule FlubGw.TcpGateway.Listener.Worker do
   ##############################
 
   def start_link(addr, port) do
-    GenServer.start_link(__MODULE__, [addr, port], [name: __MODULE__])
+    GenServer.start_link(__MODULE__, [addr, port])
   end
 
   defmodule State do
