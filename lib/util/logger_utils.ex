@@ -8,6 +8,17 @@ defmodule LoggerUtils do
     end
   end
 
+  defmacro stack() do
+    quote do
+      {:current_stacktrace,stack} = Process.info(self(), :current_stacktrace)
+      {_, result} = Enum.map_reduce(stack, "from: ", fn(elem, acc) ->
+        s = inspect(elem)
+        {s, acc <> "\n    " <> s}
+      end)
+      result
+    end
+  end
+
   defmacro trace(chardata_or_fn \\ "", metadata \\ []) do
     quote do
       c_or_f = unquote(chardata_or_fn)

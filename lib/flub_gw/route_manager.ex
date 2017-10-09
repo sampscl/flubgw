@@ -4,6 +4,8 @@
 defmodule FlubGw.Route.Manager do
   use GenServer
   import ShorterMaps
+  require Logger
+  require LoggerUtils
 
   ##############################
   # API
@@ -59,11 +61,11 @@ defmodule FlubGw.Route.Manager do
   ##############################
 
   def send_msg_to_routes(state, _msg, []), do: state
-  def send_msg_to_routes(state, msg, [{:tcp, _, _} = route | more_routes]) do
-    :ok = FlubGw.TcpRoute.Worker.route_msg(route, msg)
-    send_msg_to_routes(state, msg, more_routes)
-  end
-  def send_msg_to_routes(state, msg, [{:http, _, _} = _route | more_routes]) do
+  def send_msg_to_routes(state, msg, [route | more_routes]) do
+    case route do
+      {:tcp, _} -> :ok = FlubGw.TcpRoute.Worker.route_msg(route, msg)
+      _            -> LoggerUtils.trace("bad route: #{inspect route}")
+    end
     send_msg_to_routes(state, msg, more_routes)
   end
 

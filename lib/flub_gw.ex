@@ -47,27 +47,27 @@ defmodule FlubGw do
   Returns `:ok` on success, `{:error, reason}` on failure.
   """
   def add_direct_route(route, channel, [route_opts: route_opts, sub_opts: _sub_opts] = opts) do
+    # sub to status if requested
+    if(Keyword.get(route_opts, :sub_to_status, false)) do
+      Flub.sub(:flubgw_route_status)
+    end
+
     case FlubGw.Route.Manager.add_direct_route(route, channel, opts) do
       :ok ->
-        # pub down when route dies for any reason
-        Ghoul.summon(route, on_death: fn(route, _reason, _ghoul_state) ->
-          Flub.pub(%{route: route, status: :down}, :flubgw_route_status)
-        end)
-
         # do ghoul outside of route manager for ghoul safety
         if(Keyword.get(route_opts, :autoremove, true)) do
           Ghoul.summon({route, channel}, on_death: fn({route, channel}, _reason, _ghoul_state) ->
             remove_direct_route(route, channel)
           end)
         end
-
-        # sub to status if requested
-        if(Keyword.get(route_opts, :sub_to_status, false)) do
-          Flub.sub(:flubgw_route_status)
-        end
         :ok
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        # unsub to status if requested
+        if(Keyword.get(route_opts, :sub_to_status, false)) do
+          Flub.unsub(:flubgw_route_status)
+        end
+        {:error, reason}
     end
   end
 

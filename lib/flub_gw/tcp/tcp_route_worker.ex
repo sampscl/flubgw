@@ -5,7 +5,7 @@ defmodule FlubGw.TcpRoute.Worker do
   @behaviour FlubGw.Router
   use GenServer
   import ShorterMaps
-  import LoggerUtils
+  require LoggerUtils
   require Logger
 
   @keep_alive_interval_ms 120_000
@@ -56,6 +56,11 @@ defmodule FlubGw.TcpRoute.Worker do
     :ok = :inet.setopts(socket, [{:active, true}, :binary])
     Process.send_after(self(), :keep_alive, @keep_alive_interval_ms)
 
+    # pub down when route dies for any reason
+    Ghoul.summon(route, on_death: fn(route, _reason, _ghoul_state) ->
+      Flub.pub(%{route: route, status: :down}, :flubgw_route_status)
+    end)
+    
     {:ok, %State{route: route, socket: socket}}
   end
 
