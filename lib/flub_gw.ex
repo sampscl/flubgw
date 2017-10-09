@@ -39,6 +39,7 @@ defmodule FlubGw do
   dies. False keeps the route around until it is manually removed. Do not set
   autoremove to true and then call `remove_direct_route` or
   `eliminate_direct_route`; doing so will cause a double-removal situation.
+  Defaults to true.
 
   sub_opts:
   * See `Flub.sub` documentation.
@@ -49,13 +50,15 @@ defmodule FlubGw do
     case FlubGw.Route.Manager.add_direct_route(route, channel, opts) do
       :ok ->
         # pub down when route dies for any reason
-        Ghoul.summon(route, on_death: fn(route) ->
+        Ghoul.summon(route, on_death: fn(route, _reason, _ghoul_state) ->
           Flub.pub(%{route: route, status: :down}, :flubgw_route_status)
         end)
 
         # do ghoul outside of route manager for ghoul safety
         if(Keyword.get(route_opts, :autoremove, true)) do
-          Ghoul.summon({route, channel}, on_death: fn({route, channel}) -> remove_direct_route(route, channel) end)
+          Ghoul.summon({route, channel}, on_death: fn({route, channel}, _reason, _ghoul_state) ->
+            remove_direct_route(route, channel)
+          end)
         end
 
         # sub to status if requested
@@ -102,4 +105,16 @@ defmodule FlubGw do
     end
   end
 
+  @spec stop_gateway(gateway()) :: :ok | {:error, any()}
+  @doc """
+  Stop a gateway server for `gateway`.
+
+  Returns `:ok` on success, `{:error, reason}` on failure.
+  """
+  def stop_gateway({:tcp, local_host: addr, local_port: port} = _gateway) do
+    case FlubGw.TcpGateway.Listener.Worker.Supervisor.stop_child(addr, port) do
+      :ok -> :ok
+      err -> {:error, err}
+    end
+  end
 end

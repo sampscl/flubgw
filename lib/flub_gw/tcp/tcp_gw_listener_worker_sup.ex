@@ -16,6 +16,10 @@ defmodule FlubGw.TcpGateway.Listener.Worker.Supervisor do
     Supervisor.start_child(__MODULE__, [addr, port])
   end
 
+  def stop_child(addr, port) do
+    FlubGw.TcpGateway.Listener.Worker.stop(addr, port)
+  end
+
   ##############################
   # GenServer Callbacks
   ##############################

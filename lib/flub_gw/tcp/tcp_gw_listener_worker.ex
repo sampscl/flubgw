@@ -12,6 +12,10 @@ defmodule FlubGw.TcpGateway.Listener.Worker do
   # API
   ##############################
 
+  def stop(addr, port) do
+    :gproc.lookup_pid({:n, :l, {__MODULE__, addr, port}}) |> GenServer.stop()
+  end
+
   def start_link(addr, port) do
     GenServer.start_link(__MODULE__, [addr, port])
   end
@@ -30,7 +34,7 @@ defmodule FlubGw.TcpGateway.Listener.Worker do
   ##############################
 
   def init([addr, port]) do
-    Logger.debug("starting on #{addr}:#{port}")
+    :gproc.reg({:n, :l, {__MODULE__, addr, port}})
     {:ok, ip_address} = :inet.parse_address(to_charlist(addr))
     {:ok, socket} = :gen_tcp.listen(port, ip: ip_address, active: false)
     Enum.each(1..@simultaneous_acceptors, fn(_) -> FlubGw.TcpGateway.Acceptor.Worker.Supervisor.start_child(socket) end)
